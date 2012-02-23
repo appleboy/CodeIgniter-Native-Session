@@ -1,0 +1,9 @@
+=== How to install it ===
+
+    $ cat config/config.php >> your_application/config/config.php
+    $ cp libraries/Session.php your_application/libraries/
+    
+if you have many application, please modified your_application/config/config.php file
+
+    // modified the following config
+    $config['app_name'] = 'your_app_name';
