@@ -7,7 +7,7 @@
  * @category    Session
  * @author      Topic Deisgn
  * @modified    Bo-Yi Wu <appleboy.tw@gmail.com>
- * @date        2012-02-23
+ * @date        2012-03-02
  */
 
 class MY_Session
@@ -151,5 +151,41 @@ class MY_Session
             $this->store[$key] = $val;
         }
         $_SESSION[$this->app_name] = $this->store;
+    }
+
+    /**
+     * remove array value for specific user data element
+     *
+     * @access  public
+     * @param   array  list of data to be removed
+     * @return  void
+     */    
+    public function unset_userdata($data = array())
+    {
+        if (is_string($data))
+        {
+            $data = array($data => '');
+        }
+
+        if (count($data) > 0)
+        {
+            foreach ($data as $key => $val)
+            {
+                unset($this->store[$key]);
+            }
+        }
+
+        $_SESSION[$this->app_name] = $this->store;    
+    }
+    
+    /**
+     * Fetch all session data
+     *
+     * @access  public
+     * @return  array
+     */
+    public function all_userdata()
+    {
+        return $this->store;
     }
 }
