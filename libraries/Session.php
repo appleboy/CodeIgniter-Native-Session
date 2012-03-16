@@ -10,7 +10,7 @@
  * @date        2012-03-16
  */
 
-class MY_Session
+class Session
 {
     protected $app_name = '';
     protected $ci;
