@@ -1,5 +1,5 @@
-How to install it
-=============
+Install and Usage
+======================
 
     $ cat config/config.php >> your_application/config/config.php
     $ cp libraries/Session.php your_application/libraries/
@@ -8,3 +8,9 @@ if you have many applications, please modified your_application/config/config.ph
 
     // modified the following config
     $config['app_name'] = 'your_app_name';
+
+
+Author
+======================
+
+Bo-Yi Wu (appleboy) <appleboy.tw@gmail.com>
