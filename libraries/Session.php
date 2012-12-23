@@ -72,7 +72,7 @@ class Session
                 return;
             }
         }
-        $this->create_session();
+        $this->sess_create();
     }
 
     /**
@@ -81,7 +81,7 @@ class Session
      * @access  public
      * @return  void
      */
-    public function create_session()
+    public function sess_create()
     {
         $expire_time = time() + intval($this->ci->config->item('sess_expiration'));
         $_SESSION[$this->app_name] = array(
@@ -113,7 +113,7 @@ class Session
      */
     public function sess_destroy()
     {
-        $this->create_session();
+        $this->sess_create();
     }
 
     /**
