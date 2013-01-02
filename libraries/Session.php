@@ -13,6 +13,7 @@
 class Session
 {
     protected $app_name = '';
+    protected $sess_expiration = '';
     protected $ci;
     protected $store = array();
     protected $flashdata_key = 'flash';
@@ -25,11 +26,9 @@ class Session
      *
      * @return  void
      **/
-
     function __construct($config = array())
     {
         $this->ci = get_instance();
-        $this->app_name = $this->ci->config->item('app_name');
 
         if ( ! isset($_SESSION))
         {
@@ -53,6 +52,15 @@ class Session
      */
      private function initialize($config)
      {
+        $config = array_merge
+        (
+            array
+            (
+                'app_name' => $this->ci->config->item('app_name'),
+                'sess_expiration' => $this->ci->config->item('sess_expiration')
+            ),
+            $config
+        );
         foreach ($config as $key => $val)
         {
             if (method_exists($this, 'set_'.$key))
@@ -83,7 +91,7 @@ class Session
      */
     public function sess_create()
     {
-        $expire_time = time() + intval($this->ci->config->item('sess_expiration'));
+        $expire_time = time() + intval($this->sess_expiration);
         $_SESSION[$this->app_name] = array(
             'session_id' => md5(microtime()),
             'expire_at' => $expire_time
