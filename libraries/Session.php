@@ -5,7 +5,7 @@
  * @package     Session
  * @subpackage  Libraries
  * @category    Session
- * @author      Topic Deisgn
+ * @author	Bo-Yi Wu (appleboy) <appleboy.tw@gmail.com>
  * @author      Marko Martinović <marko@techytalk.info>
  */
 
