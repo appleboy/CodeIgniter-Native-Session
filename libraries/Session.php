@@ -5,14 +5,14 @@
  * @package     Session
  * @subpackage  Libraries
  * @category    Session
- * @author      Topic Deisgn
- * @modified    Bo-Yi Wu <appleboy.tw@gmail.com>
- * @date        2012-03-16
+ * @author	Bo-Yi Wu (appleboy) <appleboy.tw@gmail.com>
+ * @author      Marko Martinović <marko@techytalk.info>
  */
 
 class Session
 {
-    protected $app_name = '';
+    protected $sess_namespace = '';
+    protected $sess_expiration = '';
     protected $ci;
     protected $store = array();
     protected $flashdata_key = 'flash';
@@ -25,11 +25,9 @@ class Session
      *
      * @return  void
      **/
-
     function __construct($config = array())
     {
         $this->ci = get_instance();
-        $this->app_name = $this->ci->config->item('app_name');
 
         if ( ! isset($_SESSION))
         {
@@ -53,6 +51,15 @@ class Session
      */
      private function initialize($config)
      {
+        $config = array_merge
+        (
+            array
+            (
+                'sess_namespace' => $this->ci->config->item('sess_namespace'),
+                'sess_expiration' => $this->ci->config->item('sess_expiration')
+            ),
+            $config
+        );
         foreach ($config as $key => $val)
         {
             if (method_exists($this, 'set_'.$key))
@@ -64,9 +71,9 @@ class Session
                 $this->$key = $val;
             }
         }
-        if(isset($_SESSION[$this->app_name]) )
+        if(isset($_SESSION[$this->sess_namespace]) )
         {
-            $this->store = $_SESSION[$this->app_name];
+            $this->store = $_SESSION[$this->sess_namespace];
             if(! $this->is_expired())
             {
                 return;
@@ -83,12 +90,12 @@ class Session
      */
     public function sess_create()
     {
-        $expire_time = time() + intval($this->ci->config->item('sess_expiration'));
-        $_SESSION[$this->app_name] = array(
+        $expire_time = time() + intval($this->sess_expiration);
+        $_SESSION[$this->sess_namespace] = array(
             'session_id' => md5(microtime()),
             'expire_at' => $expire_time
         );
-        $this->store = $_SESSION[$this->app_name];
+        $this->store = $_SESSION[$this->sess_namespace];
     }
 
     /**
@@ -157,7 +164,7 @@ class Session
         {
             $this->store[$key] = $val;
         }
-        $_SESSION[$this->app_name] = $this->store;
+        $_SESSION[$this->sess_namespace] = $this->store;
     }
 
     /**
@@ -182,7 +189,7 @@ class Session
             }
         }
 
-        $_SESSION[$this->app_name] = $this->store;
+        $_SESSION[$this->sess_namespace] = $this->store;
     }
 
     /**
