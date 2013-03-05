@@ -83,6 +83,11 @@ class Session
      */
     public function sess_create()
     {
+        // Set the session length. If the session expiration is
+        // set to zero we'll set the expiration two years from now.
+        if ($this->sess_expiration == 0) {
+            $this->sess_expiration = (60*60*24*365*2);
+        }
         $expire_time = time() + intval($this->sess_expiration);
         $_SESSION[$this->sess_namespace] = array(
             'session_id' => md5(microtime()),
