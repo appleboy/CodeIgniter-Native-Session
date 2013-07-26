@@ -50,6 +50,7 @@ class Session
      */
      private function initialize($config)
      {
+        $this->ci->load->config('session');
         $config = array_merge
         (
             array
