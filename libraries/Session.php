@@ -28,10 +28,9 @@ class Session
     public function __construct($config = array())
     {
         $this->ci = get_instance();
+        // Default to 2 years if expiration is "0"
+        $this->_expiration = 60 * 60 * 24 * 365 * 2;
 
-        if ( ! isset($_SESSION)) {
-            session_start();
-        }
         $this->initialize($config);
 
         // Delete 'old' flashdata (from last request)
@@ -45,21 +44,38 @@ class Session
      * Initialize the configuration options
      *
      * @access  private
-     * @param   array   config options
      * @return void
      */
-     private function initialize($config)
+     private function initialize()
      {
         $this->ci->load->config('session');
-        $config = array_merge
-        (
-            array
-            (
-                'sess_namespace' => $this->ci->config->item('sess_namespace'),
-                'sess_expiration' => $this->ci->config->item('sess_expiration')
+
+        $config = array();
+        $prefs = array(
+            'sess_cookie_name',
+            'sess_expire_on_close',
+            'sess_expiration',
+            'sess_match_ip',
+            'sess_match_useragent',
+            'sess_time_to_update',
+            'cookie_prefix',
+            'cookie_path',
+            'cookie_domain',
+            'cookie_secure',
+            'cookie_httponly'
+        );
+
+        foreach ($prefs as $key) {
+            $config[$key] = $this->ci->config->item($key);
+        }
+
+        $config = array_merge(
+            array(
+                'sess_namespace' => $this->ci->config->item('sess_namespace')
             ),
             $config
         );
+
         foreach ($config as $key => $val) {
             if (method_exists($this, 'set_'.$key)) {
                 $this->{'set_'.$key}($val);
@@ -67,12 +83,42 @@ class Session
                 $this->$key = $val;
             }
         }
+
+        // Set expiration, path, and domain
+        $expire = 7200;
+        $path = '/';
+        $domain = '';
+        $secure = (bool) $config['cookie_secure'];
+        $http_only = (bool) $config['cookie_httponly'];
+
+        if ($config['sess_expiration'] !== FALSE) {
+            // Default to 2 years if expiration is "0"
+            $expire = ($config['sess_expiration'] == 0) ? $this->_expiration : $config['sess_expiration'];
+        }
+
+        if ($config['cookie_path']) {
+            // Use specified path
+            $path = $config['cookie_path'];
+        }
+
+        if ($config['cookie_domain']) {
+            // Use specified domain
+            $domain = $config['cookie_domain'];
+        }
+
+        session_set_cookie_params($config['sess_expire_on_close'] ? 0 : $expire, $path, $domain, $secure, $http_only);
+
+        if ( ! isset($_SESSION)) {
+            session_start();
+        }
+
         if (isset($_SESSION[$this->sess_namespace]) ) {
             $this->store = $_SESSION[$this->sess_namespace];
             if (! $this->is_expired()) {
                 return;
             }
         }
+
         $this->sess_create();
     }
 
@@ -87,7 +133,7 @@ class Session
         // Set the session length. If the session expiration is
         // set to zero we'll set the expiration two years from now.
         if ($this->sess_expiration == 0) {
-            $this->sess_expiration = (60*60*24*365*2);
+            $this->sess_expiration = $this->_expiration;
         }
         $expire_time = time() + intval($this->sess_expiration);
         $_SESSION[$this->sess_namespace] = array(
@@ -108,6 +154,7 @@ class Session
         if ( ! isset($this->store['expire_at'])) {
             return TRUE;
         }
+
         return (time() > $this->store['expire_at']);
     }
 
@@ -118,6 +165,15 @@ class Session
      */
     public function sess_destroy()
     {
+        // get session name.
+        $name = session_name();
+        if (isset($_COOKIE[$name])) {
+            // Clear session cookie
+            $params = session_get_cookie_params();
+            setcookie($name, '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+            unset($_COOKIE[$name]);
+        }
+
         $this->sess_create();
     }
 
