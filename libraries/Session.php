@@ -136,7 +136,7 @@ class Session
         }
 
         // update last activity time
-        $this->set_userdata('last_activity', time());
+        $this->set_userdata('last_activity', $now);
 
         if (!$destroy) {
             return;
