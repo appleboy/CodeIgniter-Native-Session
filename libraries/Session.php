@@ -118,7 +118,12 @@ class Session
         }
 
         $destroy = false;
-        if ($this->_config['sess_match_ip'] === true && !empty($this->userdata('ip_address'))
+        $now = time();
+        if (!empty($this->userdata('last_activity')) && (($this->userdata('last_activity') + $expire) < $now or $this->userdata('last_activity') > $now)) {
+            // Expired - destroy
+            log_message('debug', 'Session: Expired');
+            $destroy = true;
+        } elseif ($this->_config['sess_match_ip'] === true && !empty($this->userdata('ip_address'))
             && $this->userdata('ip_address') !== $this->ci->input->ip_address()) {
             // IP doesn't match - destroy
             log_message('debug', 'Session: IP address mismatch');
@@ -128,9 +133,10 @@ class Session
             // Agent doesn't match - destroy
             log_message('debug', 'Session: User Agent string mismatch');
             $destroy = true;
-        } elseif ($this->is_expired()) {
-            $destroy = true;
         }
+
+        // update last activity time
+        $this->set_userdata('last_activity', time());
 
         if (!$destroy) {
             return;
@@ -147,15 +153,8 @@ class Session
      */
     public function sess_create()
     {
-        // Set the session length. If the session expiration is
-        // set to zero we'll set the expiration two years from now.
-        if ($this->sess_expiration == 0) {
-            $this->sess_expiration = $this->_expiration;
-        }
-        $expire_time = time() + intval($this->sess_expiration);
         $_SESSION[$this->sess_namespace] = array(
             'session_id' => md5(microtime()),
-            'expire_at' => $expire_time,
             'last_activity' => time()
         );
 
@@ -171,21 +170,6 @@ class Session
         }
 
         $this->store = $_SESSION[$this->sess_namespace];
-    }
-
-    /**
-     * Check if session is expired
-     *
-     * @access  public
-     * @return void
-     */
-    public function is_expired()
-    {
-        if ( ! isset($this->store['expire_at'])) {
-            return true;
-        }
-
-        return (time() > $this->store['expire_at']);
     }
 
     /**
