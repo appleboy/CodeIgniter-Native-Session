@@ -25,13 +25,13 @@ class Session
      *
      * @return void
      **/
-    public function __construct($config = array())
+    public function __construct()
     {
         $this->ci = get_instance();
         // Default to 2 years if expiration is "0"
         $this->_expiration = 60 * 60 * 24 * 365 * 2;
 
-        $this->initialize($config);
+        $this->initialize();
 
         // Delete 'old' flashdata (from last request)
         $this->_flashdata_sweep();
@@ -114,9 +114,6 @@ class Session
 
         if (isset($_SESSION[$this->sess_namespace]) ) {
             $this->store = $_SESSION[$this->sess_namespace];
-            if (! $this->is_expired()) {
-                return;
-            }
         }
 
         $destroy = false;
