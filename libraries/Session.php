@@ -119,6 +119,25 @@ class Session
             }
         }
 
+        $destroy = false;
+        if ($config['sess_match_ip'] === true && !empty($this->userdata('ip_address'))
+            && $this->userdata('ip_address') !== $this->ci->input->ip_address()) {
+            // IP doesn't match - destroy
+            log_message('debug', 'Session: IP address mismatch');
+            $destroy = true;
+        } elseif ($config['sess_match_useragent'] === true && !empty($this->userdata('user_agent'))
+            && $this->userdata('user_agent') !== trim(substr($this->ci->input->user_agent(), 0, 50))) {
+            // Agent doesn't match - destroy
+            log_message('debug', 'Session: User Agent string mismatch');
+            $destroy = true;
+        } elseif ($this->is_expired()) {
+            $destroy = true;
+        }
+
+        if (!$destroy) {
+            return;
+        }
+
         $this->sess_create();
     }
 
@@ -138,7 +157,9 @@ class Session
         $expire_time = time() + intval($this->sess_expiration);
         $_SESSION[$this->sess_namespace] = array(
             'session_id' => md5(microtime()),
-            'expire_at' => $expire_time
+            'expire_at' => $expire_time,
+            'ip_address' => $this->ci->input->ip_address(),
+            'user_agent' => trim(substr($this->ci->input->user_agent(), 0, 50))
         );
         $this->store = $_SESSION[$this->sess_namespace];
     }
