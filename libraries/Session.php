@@ -16,6 +16,7 @@ class Session
     protected $ci;
     protected $store = array();
     protected $flashdata_key = 'flash';
+    private $_config = array();
 
     /**
      * Constructor
@@ -50,7 +51,7 @@ class Session
      {
         $this->ci->load->config('session');
 
-        $config = array();
+        $this->_config = array();
         $prefs = array(
             'sess_cookie_name',
             'sess_expire_on_close',
@@ -66,17 +67,17 @@ class Session
         );
 
         foreach ($prefs as $key) {
-            $config[$key] = $this->ci->config->item($key);
+            $this->_config[$key] = $this->ci->config->item($key);
         }
 
-        $config = array_merge(
+        $this->_config = array_merge(
             array(
                 'sess_namespace' => $this->ci->config->item('sess_namespace')
             ),
-            $config
+            $this->_config
         );
 
-        foreach ($config as $key => $val) {
+        foreach ($this->_config as $key => $val) {
             if (method_exists($this, 'set_'.$key)) {
                 $this->{'set_'.$key}($val);
             } elseif (isset($this->$key)) {
@@ -88,25 +89,25 @@ class Session
         $expire = 7200;
         $path = '/';
         $domain = '';
-        $secure = (bool) $config['cookie_secure'];
-        $http_only = (bool) $config['cookie_httponly'];
+        $secure = (bool) $this->_config['cookie_secure'];
+        $http_only = (bool) $this->_config['cookie_httponly'];
 
-        if ($config['sess_expiration'] !== FALSE) {
+        if ($this->_config['sess_expiration'] !== false) {
             // Default to 2 years if expiration is "0"
-            $expire = ($config['sess_expiration'] == 0) ? $this->_expiration : $config['sess_expiration'];
+            $expire = ($this->_config['sess_expiration'] == 0) ? $this->_expiration : $this->_config['sess_expiration'];
         }
 
-        if ($config['cookie_path']) {
+        if ($this->_config['cookie_path']) {
             // Use specified path
-            $path = $config['cookie_path'];
+            $path = $this->_config['cookie_path'];
         }
 
-        if ($config['cookie_domain']) {
+        if ($this->_config['cookie_domain']) {
             // Use specified domain
-            $domain = $config['cookie_domain'];
+            $domain = $this->_config['cookie_domain'];
         }
 
-        session_set_cookie_params($config['sess_expire_on_close'] ? 0 : $expire, $path, $domain, $secure, $http_only);
+        session_set_cookie_params($this->_config['sess_expire_on_close'] ? 0 : $expire, $path, $domain, $secure, $http_only);
 
         if ( ! isset($_SESSION)) {
             session_start();
@@ -117,12 +118,12 @@ class Session
         }
 
         $destroy = false;
-        if ($config['sess_match_ip'] === true && !empty($this->userdata('ip_address'))
+        if ($this->_config['sess_match_ip'] === true && !empty($this->userdata('ip_address'))
             && $this->userdata('ip_address') !== $this->ci->input->ip_address()) {
             // IP doesn't match - destroy
             log_message('debug', 'Session: IP address mismatch');
             $destroy = true;
-        } elseif ($config['sess_match_useragent'] === true && !empty($this->userdata('user_agent'))
+        } elseif ($this->_config['sess_match_useragent'] === true && !empty($this->userdata('user_agent'))
             && $this->userdata('user_agent') !== trim(substr($this->ci->input->user_agent(), 0, 50))) {
             // Agent doesn't match - destroy
             log_message('debug', 'Session: User Agent string mismatch');
@@ -155,9 +156,20 @@ class Session
         $_SESSION[$this->sess_namespace] = array(
             'session_id' => md5(microtime()),
             'expire_at' => $expire_time,
-            'ip_address' => $this->ci->input->ip_address(),
-            'user_agent' => trim(substr($this->ci->input->user_agent(), 0, 50))
+            'last_activity' => time()
         );
+
+        // Set matching values as required
+        if ($this->_config['sess_match_ip'] === true) {
+            // Store user IP address
+            $_SESSION[$this->sess_namespace]['ip_address'] = $this->ci->input->ip_address();
+        }
+
+        if ($this->_config['sess_match_useragent'] === true) {
+            // Store user agent string
+            $_SESSION[$this->sess_namespace]['user_agent'] = trim(substr($this->ci->input->user_agent(), 0, 50));
+        }
+
         $this->store = $_SESSION[$this->sess_namespace];
     }
 
@@ -170,7 +182,7 @@ class Session
     public function is_expired()
     {
         if ( ! isset($this->store['expire_at'])) {
-            return TRUE;
+            return true;
         }
 
         return (time() > $this->store['expire_at']);
@@ -204,13 +216,10 @@ class Session
      */
     public function userdata($value)
     {
-        if ($value == 'session_id') {
-            return $this->store['session_id'];
-        }
         if (isset($this->store[$value])) {
             return $this->store[$value];
         } else {
-            return FALSE;
+            return false;
         }
     }
 
@@ -300,7 +309,7 @@ class Session
     {
         // 'old' flashdata gets removed.  Here we mark all
         // flashdata as 'new' to preserve it from _flashdata_sweep()
-        // Note the function will return FALSE if the $key
+        // Note the function will return false if the $key
         // provided cannot be found
         $old_flashdata_key = $this->flashdata_key.':old:'.$key;
         $value = $this->userdata($old_flashdata_key);
