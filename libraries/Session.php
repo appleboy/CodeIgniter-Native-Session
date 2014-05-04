@@ -12,7 +12,6 @@
 class Session
 {
     protected $sess_namespace = '';
-    protected $sess_expiration = '';
     protected $ci;
     protected $store = array();
     protected $flashdata_key = 'flash';
