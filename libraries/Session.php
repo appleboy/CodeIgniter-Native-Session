@@ -118,17 +118,21 @@ class Session
 
         $destroy = false;
         $now = time();
-        if (!empty($this->userdata('last_activity')) && (($this->userdata('last_activity') + $expire) < $now or $this->userdata('last_activity') > $now)) {
+
+        $last_activity = $this->userdata('last_activity');
+        $ip_address = $this->userdata('ip_address');
+        $user_agent = $this->userdata('user_agent');
+        if (!empty($last_activity) && (($last_activity + $expire) < $now or $last_activity > $now)) {
             // Expired - destroy
             log_message('debug', 'Session: Expired');
             $destroy = true;
-        } elseif ($this->_config['sess_match_ip'] === true && !empty($this->userdata('ip_address'))
-            && $this->userdata('ip_address') !== $this->ci->input->ip_address()) {
+        } elseif ($this->_config['sess_match_ip'] === true && !empty($ip_address)
+            && $ip_address !== $this->ci->input->ip_address()) {
             // IP doesn't match - destroy
             log_message('debug', 'Session: IP address mismatch');
             $destroy = true;
-        } elseif ($this->_config['sess_match_useragent'] === true && !empty($this->userdata('user_agent'))
-            && $this->userdata('user_agent') !== trim(substr($this->ci->input->user_agent(), 0, 50))) {
+        } elseif ($this->_config['sess_match_useragent'] === true && !empty($user_agent)
+            && $user_agent !== trim(substr($this->ci->input->user_agent(), 0, 50))) {
             // Agent doesn't match - destroy
             log_message('debug', 'Session: User Agent string mismatch');
             $destroy = true;
