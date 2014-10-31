@@ -1,10 +1,13 @@
-Install and Usage
-======================
+# Install and Usage
 
-    $ cp config/session.php your_application/config/
-    $ cp libraries/Session.php your_application/libraries/
+```
+$ cp config/session.php your_application/config/
+$ cp libraries/Session.php your_application/libraries/
+```
 
-If you run multiple applications on the same site, please modify your_application/config/session.php file line:
+If you run multiple applications on the same site, please modify the following config on `your_application/config/session.php` file.
 
-    // Session namespace
-    $config['sess_namespace'] = 'your_application_name';
+```php
+// Session namespace
+$config['sess_namespace'] = 'your_application_name';
+```
