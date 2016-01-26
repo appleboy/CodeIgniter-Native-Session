@@ -156,6 +156,9 @@ class Session
      */
     public function sess_create()
     {
+        // Send a new session id to client
+        session_regenerate_id();
+        
         $_SESSION[$this->sess_namespace] = array(
             'session_id' => md5(microtime()),
             'last_activity' => time()
